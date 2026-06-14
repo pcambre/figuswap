@@ -63,7 +63,7 @@ function detectSection(line) {
   if (['i need', 'me faltan', 'necesito', 'faltan'].some(kw => low.includes(kw))) {
     return 'needs';
   }
-  if (['swap', 'repetida', 'repeti', 'cambio'].some(kw => low.includes(kw))) {
+  if (['swap', 'repetida', 'repeti', 'cambio', 'i have', 'have', 'tengo'].some(kw => low.includes(kw))) {
     return 'swaps';
   }
   return null;
