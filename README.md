@@ -1,6 +1,6 @@
-# Panini FIFA World Cup 2026 StickerSwap Matcher
+# Panini FIFA World Cup 2026 StickerSwap Matcher — Web App
 
-A professional, single-page React application and Python CLI tool designed to help sticker collectors compare their inventories with friends. It takes raw text inputs copied from tracker apps (like Figuritas or Figuri), parses the "needs" and "swaps/repeats", and outputs the exact stickers the two users can trade with each other.
+A professional, single-page React application designed to help sticker collectors compare their inventories with friends. It takes raw text inputs copied from tracker apps (like Figuritas or Figuri), parses the "needs" and "swaps/repeats", and outputs the exact stickers the two users can trade with each other.
 
 The application features a modern, high-fidelity **Obsidian Dark Theme** complete with a repeating node network pattern, floating glassmorphic summaries, dynamic list-updating exports, and print-ready PDF generators.
 
@@ -38,8 +38,7 @@ The application features a modern, high-fidelity **Obsidian Dark Theme** complet
 
 ## Technical Stack
 
-- **Core Engine & CLI**: Python 3 (pure parsing/matching algorithms)
-- **Frontend Framework**: React 19 (Functional Hooks & state management)
+- **Framework**: React 19 (Functional Hooks & state management)
 - **Vite Tooling**: Vite 6 bundler for fast HMR dev servers
 - **Styling**: Tailwind CSS v4 (configured via index.css `@theme` directives)
 - **Iconography**: Lucide React + custom inline SVGs
@@ -50,58 +49,51 @@ The application features a modern, high-fidelity **Obsidian Dark Theme** complet
 ## Project Structure
 
 ```
-figuritas/
-├── sticker_swap.py         # Original Python matching engine (CLI tool)
-├── yo.txt                  # Sample test inventory (Figuritas format)
-├── sample_person2.txt      # Sample test inventory (Figuri format)
-├── .gitignore              # Configured paths to block builds/node_modules/cache
-├── README.md               # Documentation
-└── web/                    # Single-Page Web Application
-    ├── index.html          # HTML Entry with font preconnects & favicon.svg
-    ├── vite.config.js      # React & Tailwind build configurations
-    ├── package.json        # Node package configurations
-    ├── public/
-    │   ├── favicon.svg     # Stylized geometric soccer network favicon
-    │   ├── panini-logo.png # Panini emblem asset
-    │   └── world-cup-logo.png # World Cup 2026 emblem asset
-    └── src/
-        ├── main.jsx        # Mount point
-        ├── index.css       # Tailwind imports, custom theme variables, scrollbars
-        ├── App.jsx         # Layout container & parsing coordinator
-        ├── utils/
-        │   └── matcherUtils.js  # Utility scripts (matching, inventory updates, PDF)
-        └── components/
-            ├── TextAreaInput.jsx    # Labeled text area components
-            ├── CompareButton.jsx    # Glowing violet primary compare CTA
-            ├── ResultsContainer.jsx # Floating summary cards & export panels
-            ├── TradeResultList.jsx  # Interactive country-grouped lists
-            └── EmptyState.jsx       # Fallback layout for zero-matches
+web/
+├── index.html          # HTML Entry with font preconnects & favicon.svg
+├── vite.config.js      # React & Tailwind build configurations
+├── package.json        # Node package configurations
+├── public/
+│   ├── favicon.svg     # Stylized geometric soccer network favicon
+│   ├── panini-logo.png # Panini emblem asset
+│   └── world-cup-logo.png # World Cup 2026 emblem asset
+└── src/
+    ├── main.jsx        # Mount point
+    ├── index.css       # Tailwind imports, custom theme variables, scrollbars
+    ├── App.jsx         # Layout container & parsing coordinator
+    ├── utils/
+    │   └── matcherUtils.js  # Utility scripts (matching, inventory updates, PDF)
+    └── components/
+        ├── TextAreaInput.jsx    # Labeled text area components
+        ├── CompareButton.jsx    # Glowing violet primary compare CTA
+        ├── ResultsContainer.jsx # Floating summary cards & export panels
+        ├── TradeResultList.jsx  # Interactive country-grouped lists
+        └── EmptyState.jsx       # Fallback layout for zero-matches
 ```
 
 ---
 
 ## How to Run
 
-### 1. Python CLI
-Compare two text inventories in the CLI:
+### Installation
+Run this command in the project directory to install dependencies:
 ```bash
-python3 sticker_swap.py
+npm install --prefer-offline
 ```
 
-### 2. React Web App
-To run the premium web interface locally:
+### Run Locally
+To spin up the local development server:
 ```bash
-cd web
-npm install --prefer-offline
 npm run dev
 ```
 Open [http://localhost:5173/](http://localhost:5173/) in your web browser.
 
+### Build Production Assets
 To compile production-ready assets:
 ```bash
 npm run build
 ```
-The compiled, static site will be generated under `web/dist/`.
+The compiled, static site will be generated under `dist/`.
 
 ---
 
