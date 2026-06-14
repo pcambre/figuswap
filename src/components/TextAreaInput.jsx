@@ -45,8 +45,7 @@ export default function TextAreaInput({ id, label, emoji, placeholder, value, on
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        rows={12}
-        className="w-full px-4 py-3 rounded-xl border border-border/60 bg-[#0C0C14]/85 text-sm
+        className="w-full h-44 sm:h-64 px-4 py-3 rounded-xl border border-border/60 bg-[#0C0C14]/85 text-sm
           text-text leading-relaxed resize-y
           placeholder:text-text-muted/35
           focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary

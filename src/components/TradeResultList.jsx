@@ -122,7 +122,7 @@ export default function TradeResultList({
                       key={num}
                       onClick={() => onToggleSticker(code, num)}
                       className={`inline-flex items-center justify-center
-                        min-w-[32px] h-7 px-2.5 rounded-lg text-xs font-semibold
+                        min-w-[36px] h-8 px-3 rounded-lg text-xs font-semibold
                         transition-all duration-150 cursor-pointer tabular-nums
                         ${isSelected ? c.pillSelected : c.pillUnselected}
                         ${isSelected ? '' : 'opacity-40'}

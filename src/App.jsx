@@ -95,7 +95,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
             <img src="/panini-logo.png" alt="Panini" className="h-7 sm:h-8 object-contain rounded border border-yellow-500/15" />
-            <div className="h-6 w-px bg-border/40 hidden xs:block" />
+            <div className="h-6 w-px bg-border/40 hidden sm:block" />
             <div>
               <h1 className="text-sm sm:text-base font-extrabold text-text tracking-tight font-display">
                 FIFA World Cup 2026 StickerSwap Matcher
@@ -170,7 +170,7 @@ export default function App() {
         )}
 
         {/* ── Compare Button (sticky on mobile) ── */}
-        <div className="sticky bottom-4 z-10 py-3">
+        <div className="sticky bottom-0 left-0 right-0 z-10 py-4 bg-gradient-to-t from-[#08080C] via-[#08080C]/95 to-transparent backdrop-blur-[1.5px] -mx-4 px-4 sm:-mx-6 sm:px-6">
           <CompareButton onClick={handleCompare} disabled={bothEmpty} />
         </div>
 
@@ -189,9 +189,19 @@ export default function App() {
           <p className="text-[10px] text-text-muted/50 tracking-wider">
             Panini FIFA World Cup 2026 StickerSwap Matcher · Works with Figuritas App & Figuri formats
           </p>
-          <p className="text-[10px] text-text-muted/40 font-bold tracking-widest font-display uppercase">
-            World Cup 2026
-          </p>
+          <div className="flex items-center gap-4 flex-wrap justify-center text-[10px] text-text-muted/40 font-semibold uppercase tracking-wider font-display">
+            <a 
+              href="https://github.com/pcambre/figuswap" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-violet-400 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Github size={12} />
+              GitHub Repo
+            </a>
+            <span className="hidden sm:inline opacity-30">·</span>
+            <span className="opacity-75 tracking-widest font-bold">World Cup 2026</span>
+          </div>
         </div>
       </footer>
     </div>
