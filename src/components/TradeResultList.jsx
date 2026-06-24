@@ -23,10 +23,12 @@ const InflowIcon = () => (
 
 /**
  * TradeResultList — Renders grouped stickers with selectable pill-shaped number badges.
+ * reservedStickers: { [countryCode]: Set<string> } — stickers already in a pending reservation
  */
 export default function TradeResultList({
   title, emoji, data, total, selectedCount, selection,
-  onToggleSticker, onToggleAll, variant = 'blue'
+  onToggleSticker, onToggleAll, variant = 'blue',
+  reservedStickers = {}
 }) {
   const codes = Object.keys(data).sort();
   const allSelected = isAllSelected(data, selection);
@@ -37,7 +39,7 @@ export default function TradeResultList({
       bg: 'bg-emerald-950/5 hover:bg-emerald-950/10 transition-colors',
       headerBg: 'bg-gradient-to-r from-emerald-500/10 to-transparent border-l-4 border-emerald-400 border-b border-border/20',
       pillSelected: 'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-400/30 font-semibold shadow-[0_2px_8px_rgba(16,185,129,0.08)]',
-      pillUnselected: 'bg-[#161622] text-text-muted hover:text-text hover:bg-[#202030] ring-1 ring-dashed ring-border',
+      pillUnselected: 'bg-[#181824] text-text/80 hover:text-text hover:bg-[#242436] ring-1 ring-dashed ring-text-muted/30',
       badge: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',
       checkColor: 'text-emerald-400',
       headerIcon: <OutflowIcon />
@@ -47,7 +49,7 @@ export default function TradeResultList({
       bg: 'bg-indigo-950/5 hover:bg-indigo-950/10 transition-colors',
       headerBg: 'bg-gradient-to-r from-indigo-500/10 to-transparent border-l-4 border-indigo-400 border-b border-border/20',
       pillSelected: 'bg-indigo-500/10 text-indigo-300 ring-1 ring-indigo-400/30 font-semibold shadow-[0_2px_8px_rgba(99,102,241,0.08)]',
-      pillUnselected: 'bg-[#161622] text-text-muted hover:text-text hover:bg-[#202030] ring-1 ring-dashed ring-border',
+      pillUnselected: 'bg-[#181824] text-text/80 hover:text-text hover:bg-[#242436] ring-1 ring-dashed ring-text-muted/30',
       badge: 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20',
       checkColor: 'text-indigo-400',
       headerIcon: <InflowIcon />
@@ -117,18 +119,30 @@ export default function TradeResultList({
               <div className="flex flex-wrap gap-1.5">
                 {data[code].map(num => {
                   const isSelected = codeSelection.has(num);
+                  const isReserved = !!reservedStickers[code]?.has(num);
                   return (
                     <button
                       key={num}
                       onClick={() => onToggleSticker(code, num)}
-                      className={`inline-flex items-center justify-center
+                      className={`inline-flex items-center justify-center relative
                         min-w-[36px] h-8 px-3 rounded-lg text-xs font-semibold
                         transition-all duration-150 cursor-pointer tabular-nums
                         ${isSelected ? c.pillSelected : c.pillUnselected}
+                        ${isReserved ? 'ring-2 ring-amber-400/60 shadow-[0_0_8px_rgba(251,146,60,0.25)]' : ''}
                       `}
-                      title={isSelected ? `Deselect ${code} ${num}` : `Select ${code} ${num}`}
+                      title={isReserved
+                        ? `${code} ${num} — already in a pending reservation`
+                        : isSelected ? `Deselect ${code} ${num}` : `Select ${code} ${num}`}
                     >
                       {num}
+                      {isReserved && (
+                        <span
+                          className="absolute -top-1.5 -right-1.5 text-[9px] leading-none pointer-events-none select-none"
+                          aria-label="Already reserved"
+                        >
+                          🔖
+                        </span>
+                      )}
                     </button>
                   );
                 })}

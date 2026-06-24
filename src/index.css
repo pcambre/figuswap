@@ -147,3 +147,29 @@ body {
 textarea {
   font-variant-numeric: tabular-nums lining-nums;
 }
+
+/* Tab navigation transitions */
+.tab-button {
+  position: relative;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+/* Collection sticker pill remove animation */
+.collection-pill {
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+.collection-pill:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Pill fade-out for remove */
+@keyframes pillRemove {
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+.pill-removing {
+  animation: pillRemove 0.2s ease-out forwards;
+}

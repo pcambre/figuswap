@@ -38,20 +38,43 @@ function extractCategoryCode(text) {
 }
 
 /**
- * Parse comma-separated sticker numbers, stripping multiplicity
- * markers like (×2) or (x3). Returns array of unique number strings.
+ * Parse comma-separated sticker numbers, stripping multiplicity markers.
+ * Returns array of unique number strings (for matching / needs).
  */
 function parseNumbers(raw) {
   // Remove multiplicity markers: (×2), (x3), etc.
-  const cleaned = raw.replace(/\s*\([×x]\s*\d+\)/g, '');
+  const cleaned = raw.replace(/\s*\([×x]\s*\d+\)/gi, '');
   const nums = [];
   for (const tok of cleaned.split(',')) {
     const trimmed = tok.trim();
-    if (trimmed) {
-      nums.push(trimmed);
-    }
+    if (trimmed) nums.push(trimmed);
   }
   return nums;
+}
+
+/**
+ * Parse comma-separated sticker numbers AND their multiplicity counts.
+ * Used for the swaps section so duplicates are properly tracked.
+ * Returns { nums: string[], counts: Object.<string, number> }
+ */
+function parseNumbersWithCounts(raw) {
+  const nums = [];
+  const counts = {};
+  for (const tok of raw.split(',')) {
+    const trimmed = tok.trim();
+    if (!trimmed) continue;
+    // Match optional multiplier like (×3) or (x3) or (X3)
+    const m = trimmed.match(/^(.+?)\s*\([×xX]\s*(\d+)\)$/);
+    if (m) {
+      const num = m[1].trim();
+      const count = parseInt(m[2], 10);
+      if (num) { nums.push(num); counts[num] = count; }
+    } else {
+      nums.push(trimmed);
+      counts[trimmed] = 1;
+    }
+  }
+  return { nums, counts };
 }
 
 /**
@@ -84,15 +107,17 @@ function sortStickerNums(nums) {
 }
 
 /**
- * Parse a full sticker list text and return { needs, swaps }.
- * Each maps countryCode → array of sticker number strings (sorted).
+ * Parse a full sticker list text and return { needs, swaps, swapCounts, headers }.
+ * - needs/swaps map countryCode → array of sticker number strings (sorted, unique)
+ * - swapCounts maps countryCode → { stickerNum: count } preserving multiplicity
  *
  * @param {string} text - Raw pasted text from a sticker tracking app
- * @returns {{ needs: Object.<string, string[]>, swaps: Object.<string, string[]> }}
+ * @returns {{ needs: Object, swaps: Object, swapCounts: Object, headers: Object }}
  */
 export function parseStickerList(text) {
   const needs = {};
   const swaps = {};
+  const swapCounts = {}; // { code: { num: count } }
   const headers = {};
 
   let section = null; // 'needs' | 'swaps'
@@ -122,28 +147,37 @@ export function parseStickerList(text) {
     const code = extractCategoryCode(header);
     if (!code) continue;
 
-    const numbers = parseNumbers(numsRaw);
-    if (numbers.length === 0) continue;
-
     // Save header mapping (e.g. "MEX 🇲🇽" or "🇲🇽 MEX")
     headers[code] = header;
 
-    const target = section === 'needs' ? needs : swaps;
-    if (!target[code]) {
-      target[code] = new Set();
-    }
-    for (const n of numbers) {
-      target[code].add(n);
+    if (section === 'needs') {
+      // Needs: strip counts, just track which stickers are needed
+      const numbers = parseNumbers(numsRaw);
+      if (numbers.length === 0) continue;
+      if (!needs[code]) needs[code] = new Set();
+      for (const n of numbers) needs[code].add(n);
+    } else {
+      // Swaps: preserve multiplicity counts
+      const { nums, counts } = parseNumbersWithCounts(numsRaw);
+      if (nums.length === 0) continue;
+      if (!swaps[code]) swaps[code] = new Set();
+      if (!swapCounts[code]) swapCounts[code] = {};
+      for (const n of nums) {
+        swaps[code].add(n);
+        // Accumulate counts (in case same sticker appears on multiple lines)
+        swapCounts[code][n] = (swapCounts[code][n] || 0) + (counts[n] || 1);
+      }
     }
   }
 
   // Convert sets to sorted arrays
-  const result = { needs: {}, swaps: {}, headers };
+  const result = { needs: {}, swaps: {}, swapCounts: {}, headers };
   for (const [code, numSet] of Object.entries(needs)) {
     result.needs[code] = sortStickerNums([...numSet]);
   }
   for (const [code, numSet] of Object.entries(swaps)) {
     result.swaps[code] = sortStickerNums([...numSet]);
+    result.swapCounts[code] = swapCounts[code];
   }
 
   return result;

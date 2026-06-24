@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Copy, Check, FileDown, ArrowRightLeft } from 'lucide-react';
+import { Copy, Check, FileDown, ArrowRightLeft, CheckCircle, ShieldCheck, Bookmark } from 'lucide-react';
 import TradeResultList from './TradeResultList';
 import EmptyState from './EmptyState';
 import {
@@ -47,12 +47,26 @@ const SwapMedallionIcon = () => (
  * @param {Object} props
  * @param {{ iGiveThem: Object, theyGiveMe: Object }} props.matches
  * @param {string} props.myListRaw
+ * @param {boolean} props.hasLocalCollection - Whether a local collection exists
+ * @param {function} props.onConfirmSwap - Callback to confirm swap and update local collection
+ * @param {function} props.onReserveSwap - Callback to reserve the trade for later
+ * @param {Object} props.reservedGiveStickers - { code: Set<string> } stickers already reserved to give
+ * @param {Object} props.reservedGetStickers  - { code: Set<string> } stickers already reserved to receive
  */
-export default function ResultsContainer({ matches, myListRaw }) {
+export default function ResultsContainer({
+  matches, myListRaw, hasLocalCollection, onConfirmSwap, onReserveSwap,
+  reservedGiveStickers = {}, reservedGetStickers = {}
+}) {
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState('figuritas');
   const [copiedUpdated, setCopiedUpdated] = useState(false);
+  const [showSwapConfirm, setShowSwapConfirm] = useState(false);
+  const [swapConfirmed, setSwapConfirmed] = useState(false);
+  // Reserve state
+  const [showReserveForm, setShowReserveForm] = useState(false);
+  const [reserveNote, setReserveNote] = useState('');
+  const [tradeReserved, setTradeReserved] = useState(false);
 
   // ── Selection state ──
   const [selGive, setSelGive] = useState(() => initAllSelected(matches.iGiveThem));
@@ -283,6 +297,7 @@ export default function ResultsContainer({ matches, myListRaw }) {
             onToggleSticker={(code, num) => toggleSticker('give', code, num)}
             onToggleAll={() => toggleAll('give')}
             variant="green"
+            reservedStickers={reservedGiveStickers}
           />
         )}
         {totalGet > 0 && (
@@ -296,6 +311,7 @@ export default function ResultsContainer({ matches, myListRaw }) {
             onToggleSticker={(code, num) => toggleSticker('get', code, num)}
             onToggleAll={() => toggleAll('get')}
             variant="blue"
+            reservedStickers={reservedGetStickers}
           />
         )}
       </div>
@@ -362,6 +378,182 @@ export default function ResultsContainer({ matches, myListRaw }) {
           </div>
         </div>
       </div>
+
+      {/* ── Reserve Trade Panel ── */}
+      {hasLocalCollection && onReserveSwap && (
+        <div className={`mt-6 rounded-2xl border p-5 transition-all duration-500 backdrop-blur-sm animate-scale-in
+          ${tradeReserved
+            ? 'bg-amber-950/20 border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.1)]'
+            : 'bg-gradient-to-r from-amber-950/15 to-orange-950/10 border-amber-500/15 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
+          }`}
+        >
+          {tradeReserved ? (
+            <div className="flex items-center gap-4 animate-fade-in">
+              <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/25 shrink-0">
+                <Bookmark size={22} className="text-amber-400" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-amber-300 font-display">Trade Reserved!</h4>
+                <p className="text-xs text-amber-400/60 mt-1">Saved for later — confirm or cancel it anytime from the Reservations tab.</p>
+              </div>
+            </div>
+          ) : !showReserveForm ? (
+            <button
+              onClick={() => setShowReserveForm(true)}
+              disabled={selectedTotal === 0}
+              className={`w-full flex items-center justify-between gap-4 cursor-pointer group
+                ${selectedTotal === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-amber-500/12 border border-amber-500/18 shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                  <Bookmark size={22} className="text-amber-400" />
+                </div>
+                <div className="text-left">
+                  <h4 className="text-sm font-bold text-text group-hover:text-amber-300 font-display transition-colors">Reserve Trade for Later</h4>
+                  <p className="text-xs text-text-muted/50 mt-1">Save this trade without committing — confirm or cancel it anytime.</p>
+                </div>
+              </div>
+              <div className="shrink-0 text-[10px] font-bold font-display tracking-wider uppercase px-4 py-2 rounded-xl
+                bg-amber-500/10 border border-amber-500/20 text-amber-300 group-hover:bg-amber-500/18 transition-colors">
+                Reserve
+              </div>
+            </button>
+          ) : (
+            <div className="animate-slide-down">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-amber-500/12 border border-amber-500/20 shrink-0">
+                  <Bookmark size={22} className="text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-text font-display mb-2">Reserve this trade?</h4>
+                  <input
+                    type="text"
+                    value={reserveNote}
+                    onChange={e => setReserveNote(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (() => {
+                      onReserveSwap(selectedData, reserveNote);
+                      setTradeReserved(true);
+                      setShowReserveForm(false);
+                    })()}
+                    placeholder="Optional note (e.g. with Matías)..."
+                    className="w-full px-3 py-2 rounded-xl border border-amber-500/20 bg-[#0C0C14]/85 text-xs
+                      text-text placeholder:text-text-muted/25
+                      focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/30
+                      transition-all"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 ml-[60px]">
+                <button
+                  onClick={() => {
+                    onReserveSwap(selectedData, reserveNote);
+                    setTradeReserved(true);
+                    setShowReserveForm(false);
+                  }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider
+                    bg-gradient-to-r from-amber-500 to-orange-500 text-white border border-amber-500/30
+                    hover:shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.02] active:scale-[0.98]
+                    transition-all cursor-pointer"
+                >
+                  <Bookmark size={14} />
+                  Yes, Reserve
+                </button>
+                <button
+                  onClick={() => setShowReserveForm(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider
+                    text-text-muted border border-border/30 hover:bg-surface/40 hover:text-text
+                    transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Confirm Swap Panel ── */}
+      {hasLocalCollection && onConfirmSwap && (
+        <div className={`mt-6 rounded-2xl border p-5 transition-all duration-500 backdrop-blur-sm animate-scale-in
+          ${swapConfirmed
+            ? 'bg-emerald-950/20 border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]'
+            : 'bg-gradient-to-r from-violet-950/25 to-fuchsia-950/15 border-violet-500/20 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
+          }`}
+        >
+          {swapConfirmed ? (
+            <div className="flex items-center gap-4 animate-fade-in">
+              <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/25 shrink-0">
+                <CheckCircle size={22} className="text-emerald-400" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-emerald-300 font-display">Swap Confirmed!</h4>
+                <p className="text-xs text-emerald-400/60 mt-1">Your collection has been updated — given stickers removed from duplicates, received stickers removed from needs.</p>
+              </div>
+            </div>
+          ) : !showSwapConfirm ? (
+            <button
+              onClick={() => setShowSwapConfirm(true)}
+              disabled={selectedTotal === 0}
+              className={`w-full flex items-center justify-between gap-4 cursor-pointer group
+                ${selectedTotal === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-violet-500/15 border border-violet-500/20 shrink-0 group-hover:bg-violet-500/25 transition-colors">
+                  <ShieldCheck size={22} className="text-violet-400" />
+                </div>
+                <div className="text-left">
+                  <h4 className="text-sm font-bold text-text group-hover:text-violet-300 font-display transition-colors">Confirm Swap & Update Collection</h4>
+                  <p className="text-xs text-text-muted/50 mt-1">Apply this trade to your saved collection — {selectedGiveCount} stickers out, {selectedGetCount} stickers in.</p>
+                </div>
+              </div>
+              <div className="shrink-0 text-[10px] font-bold font-display tracking-wider uppercase px-4 py-2 rounded-xl
+                bg-violet-500/10 border border-violet-500/25 text-violet-300 group-hover:bg-violet-500/20 transition-colors">
+                Confirm
+              </div>
+            </button>
+          ) : (
+            <div className="animate-slide-down">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/25 shrink-0">
+                  <ShieldCheck size={22} className="text-amber-400" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-text font-display">Confirm this swap?</h4>
+                  <p className="text-xs text-text-muted/60 mt-1 leading-relaxed">
+                    This will update your saved collection:<br />
+                    <span className="text-emerald-400/80">• Remove {selectedGiveCount} stickers from your duplicates</span><br />
+                    <span className="text-indigo-400/80">• Remove {selectedGetCount} stickers from your needs</span>
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 ml-[60px]">
+                <button
+                  onClick={() => {
+                    onConfirmSwap(selectedData);
+                    setSwapConfirmed(true);
+                    setShowSwapConfirm(false);
+                  }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider
+                    bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white border border-violet-500/20
+                    hover:shadow-[0_0_20px_rgba(139,92,246,0.35)] hover:scale-[1.02] active:scale-[0.98]
+                    transition-all cursor-pointer"
+                >
+                  <CheckCircle size={14} />
+                  Yes, Confirm Swap
+                </button>
+                <button
+                  onClick={() => setShowSwapConfirm(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider
+                    text-text-muted border border-border/30 hover:bg-surface/40 hover:text-text
+                    transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Large glowing copy panel button at bottom */}
       <button
