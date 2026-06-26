@@ -78,12 +78,14 @@ export function createReservation(selectedData, note = '') {
  * @param {Array} reservations
  * @returns {{ updatedReservations: Array, trade: Object|null }}
  */
-export function confirmReservation(id, reservations) {
+export function confirmReservation(id, keepGive, keepGet, reservations) {
   let trade = null;
   const updatedReservations = reservations.map(r => {
     if (r.id === id && r.status === 'pending') {
-      trade = { iGiveThem: r.iGiveThem, theyGiveMe: r.theyGiveMe };
-      return { ...r, status: 'confirmed' };
+      const finalGive = keepGive !== undefined ? keepGive : r.iGiveThem;
+      const finalGet = keepGet !== undefined ? keepGet : r.theyGiveMe;
+      trade = { iGiveThem: finalGive, theyGiveMe: finalGet };
+      return { ...r, iGiveThem: finalGive, theyGiveMe: finalGet, status: 'confirmed' };
     }
     return r;
   });

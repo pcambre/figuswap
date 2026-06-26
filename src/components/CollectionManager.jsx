@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Upload, X, Package, AlertTriangle, Search, ChevronDown, FileUp } from 'lucide-react';
+import { Plus, Trash2, Upload, X, Package, AlertTriangle, Search, ChevronDown, FileUp, Download, FileDown, Check, Copy } from 'lucide-react';
 import { parseStickerList, countTotal } from '../utils/matcherUtils';
+import { formatCollection } from '../utils/localStorageUtils';
 
 /**
  * Predefined FIFA World Cup 2026 country codes with flag emojis.
  */
-const COUNTRY_OPTIONS = [
+export const COUNTRY_OPTIONS = [
   { code: 'FWC', label: 'FWC 🏆', flag: '🏆' },
   { code: 'CC', label: 'CC 🥤', flag: '🥤' },
   { code: 'ALG', label: 'ALG 🇩🇿', flag: '🇩🇿' },
@@ -237,6 +238,43 @@ export default function CollectionManager({
   // Clear confirmation
   const [confirmClear, setConfirmClear] = useState(false);
 
+  // Bulk export state
+  const [showExport, setShowExport] = useState(false);
+  const [exportFormat, setExportFormat] = useState('figuritas');
+  const [copiedExport, setCopiedExport] = useState(false);
+
+  const handleCopyCollection = async () => {
+    const text = formatCollection(collection, exportFormat);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedExport(true);
+      setTimeout(() => setCopiedExport(false), 2000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopiedExport(true);
+      setTimeout(() => setCopiedExport(false), 2000);
+    }
+  };
+
+  const handleDownloadCollection = () => {
+    const isJson = exportFormat === 'json';
+    const text = formatCollection(collection, exportFormat);
+    const blob = new Blob([text], { type: isJson ? 'application/json' : 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `my-sticker-collection.${isJson ? 'json' : 'txt'}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Search filter for viewing collection
   const [filterSearch, setFilterSearch] = useState('');
 
@@ -420,6 +458,21 @@ export default function CollectionManager({
           </div>
           {!isEmpty && (
             <div className="flex items-center gap-2">
+              {!confirmClear && (
+                <button
+                  onClick={() => setShowExport(!showExport)}
+                  className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1.5
+                    rounded-lg transition-all cursor-pointer border
+                    ${showExport
+                      ? 'bg-violet-600/20 text-violet-300 border-violet-500/30'
+                      : 'text-text-muted/50 hover:text-violet-300 hover:bg-violet-600/10 border-border/30 hover:border-violet-500/20'
+                    }`}
+                >
+                  <Download size={11} />
+                  <span>Export</span>
+                </button>
+              )}
+
               {!confirmClear ? (
                 <button
                   onClick={() => setConfirmClear(true)}
@@ -469,6 +522,71 @@ export default function CollectionManager({
           </div>
         </div>
       </div>
+
+      {/* Export Panel */}
+      {showExport && !isEmpty && (
+        <div className="glass-panel rounded-2xl p-5 mb-6 border border-border/30 bg-[#101018]/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.01),0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-sm animate-scale-in">
+          <div className="flex items-center gap-2 mb-2">
+            <FileDown size={14} className="text-violet-400" />
+            <h4 className="text-xs font-bold font-display tracking-widest text-violet-300 uppercase">
+              Export My Collection
+            </h4>
+          </div>
+          <p className="text-xs text-text-muted/65 mb-4 max-w-lg leading-relaxed">
+            Export your entire collection (needs and duplicates) in Figuritas format, Figuri format, or structured JSON.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            {/* Segmented control for formats */}
+            <div className="flex bg-[#08080C]/80 p-1 rounded-xl border border-border/40 gap-1 flex-grow">
+              {['figuritas', 'figuri', 'json'].map((fmt) => (
+                <button
+                  key={fmt}
+                  onClick={() => setExportFormat(fmt)}
+                  className={`flex-1 text-center py-2 rounded-lg text-xs font-bold font-display uppercase tracking-wider transition-all cursor-pointer
+                    ${exportFormat === fmt
+                      ? 'bg-violet-600 text-white shadow-[0_2px_8px_rgba(139,92,246,0.25)]'
+                      : 'text-text-muted/60 hover:text-text hover:bg-surface/30'
+                    }`}
+                >
+                  {fmt === 'figuritas' ? 'Figuritas' : fmt === 'figuri' ? 'Figuri' : 'JSON'}
+                </button>
+              ))}
+            </div>
+
+            {/* Copy & Download action buttons */}
+            <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+              <button
+                onClick={handleCopyCollection}
+                className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider transition-all duration-300 cursor-pointer border shrink-0
+                  ${copiedExport
+                    ? 'bg-emerald-950/20 text-emerald-400 border-emerald-500/30'
+                    : 'bg-violet-600/10 text-violet-300 border-violet-500/20 hover:border-violet-500/40 hover:bg-violet-600/20 hover:shadow-md'
+                  }`}
+              >
+                {copiedExport ? (
+                  <>
+                    <Check size={14} strokeWidth={2.5} />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} strokeWidth={2.5} />
+                    Copy List
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleDownloadCollection}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider transition-all duration-300 cursor-pointer border bg-violet-600/10 text-violet-300 border-violet-500/20 hover:border-violet-500/40 hover:bg-violet-600/20 hover:shadow-md shrink-0"
+              >
+                <FileDown size={14} strokeWidth={2.5} />
+                Download File
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add sticker form */}
       <div className="glass-panel rounded-2xl p-5 mb-6">

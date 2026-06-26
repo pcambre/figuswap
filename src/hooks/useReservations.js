@@ -51,9 +51,9 @@ export default function useReservations({ onConfirmSwap }) {
   }, []);
 
   // ── Confirm a pending reservation (applies swap to collection) ──
-  const confirmReservation = useCallback((id) => {
+  const confirmReservation = useCallback((id, keepGive, keepGet) => {
     setReservations(prev => {
-      const { updatedReservations, trade } = confirmUtil(id, prev);
+      const { updatedReservations, trade } = confirmUtil(id, keepGive, keepGet, prev);
       if (trade && onConfirmSwap) {
         onConfirmSwap(trade);
       }

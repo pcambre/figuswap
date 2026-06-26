@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Github, ArrowLeftRight, Package, Database, Bookmark } from 'lucide-react';
+import { Github, ArrowLeftRight, Package, Database, Bookmark, PieChart } from 'lucide-react';
 import TextAreaInput from './components/TextAreaInput';
 import CompareButton from './components/CompareButton';
 import ResultsContainer from './components/ResultsContainer';
 import CollectionManager from './components/CollectionManager';
 import ReservationsPanel from './components/ReservationsPanel';
+import StatisticsPanel from './components/StatisticsPanel';
 import { parseStickerList, calculateMatches } from './utils/matcherUtils';
 import useLocalCollection from './hooks/useLocalCollection';
 import useReservations from './hooks/useReservations';
@@ -140,6 +141,7 @@ export default function App() {
                 badge: !localCollection.isEmpty ? localCollection.needsCount + localCollection.swapsCount : null },
               { key: 'reservations', label: 'Reservations', icon: <Bookmark size={14} />,
                 badge: reservations.pendingCount > 0 ? reservations.pendingCount : null },
+              { key: 'statistics',   label: 'Stats',       icon: <PieChart size={14} />,        badge: null },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -294,6 +296,13 @@ export default function App() {
             onConfirm={reservations.confirmReservation}
             onCancel={reservations.cancelReservation}
             onPartialCancel={reservations.partialCancel}
+          />
+        )}
+
+        {/* 📈 STATISTICS TAB 📈 */}
+        {activeTab === 'statistics' && (
+          <StatisticsPanel
+            collection={localCollection.collection}
           />
         )}
       </main>

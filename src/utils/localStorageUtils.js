@@ -339,3 +339,49 @@ export function countSwapsWithQuantity(swaps, swapCounts) {
   }
   return total;
 }
+
+/**
+ * Format a collection into a target string structure (figuritas, figuri, or json).
+ */
+export function formatCollection(collection, format) {
+  if (format === 'json') {
+    return JSON.stringify(collection, null, 2);
+  }
+
+  const needsCount = Object.values(collection.needs || {}).reduce((sum, arr) => sum + arr.length, 0);
+  const swapsCount = Object.values(collection.swaps || {}).reduce((sum, arr) => sum + arr.length, 0);
+
+  const formatSection = (title, items, isSwaps = false) => {
+    const lines = [title];
+    const sortedCodes = Object.keys(items).sort();
+    for (const code of sortedCodes) {
+      const nums = items[code];
+      if (nums && nums.length > 0) {
+        const header = collection.headers?.[code] || code;
+        if (isSwaps) {
+          const counts = collection.swapCounts?.[code] || {};
+          const parts = nums.map(n => {
+            const c = counts[n] || 1;
+            return c > 1 ? `${n} (×${c})` : n;
+          });
+          lines.push(`${header}: ${parts.join(', ')}`);
+        } else {
+          lines.push(`${header}: ${nums.join(', ')}`);
+        }
+      }
+    }
+    return lines.join('\n');
+  };
+
+  if (format === 'figuri') {
+    const needsPart = formatSection(`❌ Me faltan (${needsCount}):`, collection.needs || {});
+    const swapsPart = formatSection(`🔁 Repetidas (${swapsCount}):`, collection.swaps || {}, true);
+    return `${needsPart}\n\n${swapsPart}`;
+  } else {
+    // Default to 'figuritas' format
+    const needsPart = formatSection('I need', collection.needs || {});
+    const swapsPart = formatSection('Swaps', collection.swaps || {}, true);
+    return `${needsPart}\n\n${swapsPart}`;
+  }
+}
+

@@ -275,12 +275,15 @@ function ReservationCard({ reservation, onConfirm, onCancel, onPartialCancel }) 
                 <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/15 px-4 py-3 mb-3 animate-slide-down">
                   <p className="text-xs text-text-muted/70 mb-3">
                     Apply this trade to your collection?<br />
-                    <span className="text-emerald-400/80">• Remove {giveCount} stickers from your duplicates</span><br />
-                    <span className="text-indigo-400/80">• Remove {getCount} stickers from your needs</span>
+                    <span className="text-emerald-400/80">• Remove {keepGiveCount} stickers from your duplicates</span><br />
+                    <span className="text-indigo-400/80">• Remove {keepGetCount} stickers from your needs</span>
                   </p>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => { onConfirm(reservation.id); setConfirmingAction(null); }}
+                      onClick={() => {
+                        onConfirm(reservation.id, buildKeepObj(keepGive), buildKeepObj(keepGet));
+                        setConfirmingAction(null);
+                      }}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-bold font-display
                         uppercase tracking-wider bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white
                         hover:shadow-[0_0_15px_rgba(139,92,246,0.35)] active:scale-[0.98] transition-all cursor-pointer"
